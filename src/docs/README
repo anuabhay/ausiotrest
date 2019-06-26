@@ -1,0 +1,9 @@
+{"id":"1","mapSchedule":{"Friday":{"id":"1","time":1561502571746,"duration":2,"enabled":true}},"enabled":true}[
+
+
+ curl -X POST   http://localhost:8080/schedule  -d @/tmp/staff.json -H 'Cache-Control: no-cache'   -H 'Content-Type: application/json'
+
+
+ mongo
+ use test
+ db.schedule.find();
