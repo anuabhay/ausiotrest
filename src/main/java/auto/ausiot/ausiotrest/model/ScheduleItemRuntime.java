@@ -12,16 +12,11 @@ import java.util.Date;
 
 @AllArgsConstructor
 @Getter @Setter
-//employee will be the name of table in mongodb
-@Document(collection = "scheduleitem")
-public class ScheduleItem {
+@Document(collection = "scheduleruntime")
+public class ScheduleItemRuntime {
     @Id
     private @NonNull String id;
-
-    @JsonDeserialize(using= CustomerDateAndTimeDeserialize.class)
-    private @NonNull Date time;
-
-    private @NonNull int duration ;
-    private @NonNull boolean enabled = true;
-    private Date lastTriggered;
+    private @NonNull Date starttime;
+    private @NonNull Date endtime;
+    private @NonNull String status;
 }

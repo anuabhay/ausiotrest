@@ -1,17 +1,11 @@
 package auto.ausiot.ausiotrest.tasks;
 
-import auto.ausiot.ausiotrest.model.Schedule;
-import auto.ausiot.ausiotrest.repository.ScheduleRepository;
 import org.quartz.*;
 import org.quartz.impl.StdSchedulerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
-import java.text.*;
 @Component
 public class ScheduleTask   {
 
