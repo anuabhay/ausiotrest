@@ -16,9 +16,13 @@ public class Constants {
     public static String ACTION_R2_CLOSE = "R2OFF";
 
     //MQTT Login
-    public static String MQTT_HOST = "tcp://m12.cloudmqtt.com:13727";
-    public static String MQTT_USER = "sbpmtfqc";
-    public static String MQTT_PASSWD = "GGGMHoXnNMz-";
+//    public static String MQTT_HOST = "tcp://m12.cloudmqtt.com:13727";
+//    public static String MQTT_USER = "sbpmtfqc";
+//    public static String MQTT_PASSWD = "GGGMHoXnNMz-";
+
+    public static String MQTT_HOST = "tcp://postman.cloudmqtt.com:10976";
+    public static String MQTT_USER = "ttfygwil";
+    public static String MQTT_PASSWD = "Zuvz27NYz943";
 
     public static int ALARM_FREQUENCY = 15;
     public static int ALARM_REQUEST_CODE=101;

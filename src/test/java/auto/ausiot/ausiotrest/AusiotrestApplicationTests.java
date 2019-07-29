@@ -49,7 +49,7 @@ public class AusiotrestApplicationTests {
 		//ScheduleMaster sm = new ScheduleMaster();
 		Schedule sc = getSchedule();
 		ScheduleItem scitm = sc.getcheduleItem(Days.Monday);
-		sm.addScheduleItemRuntime(sc.getId(),scitm);
+		//sm.addScheduleItemRuntime(sc.getId(),scitm);
 	}
 
 	@Test
@@ -69,8 +69,8 @@ public class AusiotrestApplicationTests {
 	@Test
 	public void testEscape() throws MqttException, URISyntaxException {
 		String s= "ozbk/U001";
-		s.
-
+		s = s.replace("/","\\/");
+		int x = 1;
 	}
 
 }

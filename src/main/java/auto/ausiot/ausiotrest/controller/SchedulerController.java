@@ -3,6 +3,7 @@ package auto.ausiot.ausiotrest.controller;
 import auto.ausiot.ausiotrest.model.*;
 import auto.ausiot.ausiotrest.repository.EmployeeRepository;
 import auto.ausiot.ausiotrest.repository.ScheduleRepository;
+import auto.ausiot.ausiotrest.tasks.ManageSensorRuntime;
 import auto.ausiot.ausiotrest.tasks.ScheduleMaster;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -10,6 +11,8 @@ import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfi
 import org.springframework.web.bind.annotation.*;
 
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.text.ParseException;
 import java.util.*;
 
@@ -59,6 +62,7 @@ public class SchedulerController
         Schedule snew = new Schedule(s.getId(),s.getMapSchedule(),s.isEnabled(),s.getType());
         if (scheduleRepository.findById(s.getId())!=null) {
             scheduleRepository.deleteById(s.getId());
+            ManageSensorRuntime.removeSensorRecord(s.getId());
         }
         scheduleRepository.insert(snew);
         return snew;
@@ -75,7 +79,12 @@ public class SchedulerController
     @GetMapping("/schedule/{id}")
     public Optional<Schedule> getSchedule(@PathVariable String id)
     {
-         Optional<Schedule> sc = scheduleRepository.findById(id);
+//        try {
+//            id = URLDecoder.decode(id,"utf-8");
+//        } catch (UnsupportedEncodingException e) {
+//            e.printStackTrace();
+//        }
+        Optional<Schedule> sc = scheduleRepository.findById(id);
         // If user does not have a schedule give him the default
         if (sc.isPresent() == false){
             Map<Days, ScheduleItem> si = new HashMap<>();

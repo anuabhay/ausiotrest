@@ -3,6 +3,7 @@ package auto.ausiot.ausiotrest.tasks;
 import auto.ausiot.ausiotrest.model.*;
 import auto.ausiot.ausiotrest.repository.ScheduleRepository;
 import auto.ausiot.ausiotrest.repository.ScheduleRuntimeRepository;
+import auto.ausiot.ausiotrest.util.Util;
 import mqtt.Constants;
 import mqtt.Subscriber;
 import org.eclipse.paho.client.mqttv3.MqttException;
@@ -133,8 +134,8 @@ public class ScheduleMaster  implements Job {
     }
     public  void closeSensor(String schduleID) throws MqttException, URISyntaxException {
         Optional<ScheduleItemRuntime> sito = sruntimerepo.findById(schduleID);
-        String topic = getTopic(schduleID);
-        String sensorNumber = getSensorID(schduleID);
+        String topic = Util.getTopic(schduleID);
+        String sensorNumber = Util.getSensorID(schduleID);
 
         if (sito.isPresent() == true) {
             ScheduleItemRuntime sit = sito.get();
@@ -146,6 +147,7 @@ public class ScheduleMaster  implements Job {
                     //sruntimerepo.deleteById(schduleID);
                     updateScheduleItemRuntimetoDB(schduleID,Constants.RUN_STATUS_CLOSED);
                     logger.debug(". " + topic );
+                    Subscriber.disconnect();
                 }
             } catch (ParseException e) {
                 e.printStackTrace();
@@ -155,29 +157,30 @@ public class ScheduleMaster  implements Job {
 
     public  void openSensor(String schduleID, ScheduleItem si) throws MqttException, URISyntaxException {
         Optional<ScheduleItemRuntime> sito = sruntimerepo.findById(schduleID);
-        String topic = getTopic(schduleID);
-        String sensorNumber = getSensorID(schduleID);
+        String topic = Util.getTopic(schduleID);
+        String sensorNumber = Util.getSensorID(schduleID);
         Subscriber.connect();
         Subscriber.sendMsg(topic, "R" + sensorNumber + "ON");
         logger.debug("Open Action ------- " + topic );
         addScheduleItemRuntimetoDB(schduleID,si,Constants.RUN_STATUS_RUNNING);
+        Subscriber.disconnect();
     }
 
-    public String getTopic(String schduleID){
-        String topic = schduleID.substring(0,schduleID.lastIndexOf("_"));
-        return topic;
-    }
-
-    public String getSensorID(String schduleID){
-        String ID = schduleID.substring(schduleID.lastIndexOf("_") + 1,schduleID.length());
-        return ID;
-    }
+//    public String getTopic(String schduleID){
+//        String topic = schduleID.substring(0,schduleID.lastIndexOf("_"));
+//        return topic;
+//    }
+//
+//    public String getSensorID(String schduleID){
+//        String ID = schduleID.substring(schduleID.lastIndexOf("_") + 1,schduleID.length());
+//        return ID;
+//    }
 
     public boolean compareDates(Date endTime , Date nowTime) throws ParseException {
         boolean ret = false;
         if (endTime.getHours() == nowTime.getHours()){
             long diffmints = (endTime.getMinutes() - nowTime.getMinutes());
-            if ( diffmints < 0)
+            if ( diffmints <= 0)
                 ret = true;
 
 
@@ -194,7 +197,7 @@ public class ScheduleMaster  implements Job {
 
         if (startTime.getHours() == nowTime.getHours()){
             long diffmints = (nowTime.getMinutes() - startTime.getMinutes());
-            if ((diffmints > 0) && (diffmints < 15)) {
+            if ((diffmints >= 0) && (diffmints < gapInMinutes)) {
                 ret = true;
             }
 
