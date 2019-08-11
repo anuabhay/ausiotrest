@@ -22,9 +22,10 @@ repositories {
 dependencies {
 	compile 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.0.2'
 	compile 'org.eclipse.paho:org.eclipse.paho.android.service:1.0.2'
-
-	implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
+    implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'io.jsonwebtoken:jjwt:0.2'
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok:1.16.10'
 	compile group: 'org.quartz-scheduler', name: 'quartz', version: '2.2.1'

@@ -1,6 +1,7 @@
 package auto.ausiot.ausiotrest.controller;
 
 import auto.ausiot.ausiotrest.model.*;
+import auto.ausiot.ausiotrest.model.security.User;
 import auto.ausiot.ausiotrest.repository.EmployeeRepository;
 import auto.ausiot.ausiotrest.repository.ScheduleRepository;
 import auto.ausiot.ausiotrest.tasks.ManageSensorRuntime;
@@ -27,6 +28,9 @@ public class SchedulerController
 
     @Autowired
     ScheduleRepository scheduleRepository;
+
+    @Autowired
+    private CustomUserDetailsService userService;
 
     @Autowired
     ScheduleMaster sm;
@@ -79,11 +83,6 @@ public class SchedulerController
     @GetMapping("/schedule/{id}")
     public Optional<Schedule> getSchedule(@PathVariable String id)
     {
-//        try {
-//            id = URLDecoder.decode(id,"utf-8");
-//        } catch (UnsupportedEncodingException e) {
-//            e.printStackTrace();
-//        }
         Optional<Schedule> sc = scheduleRepository.findById(id);
         // If user does not have a schedule give him the default
         if (sc.isPresent() == false){
@@ -119,6 +118,36 @@ public class SchedulerController
         scheduleRepository.deleteById(id);
         String res=  "{ \"success\" : "+ (result ? "true" : "false") +" }";
         return res;
+    }
+
+    @GetMapping("/user/{id}")
+    public User getUser(@PathVariable String id)
+    {
+        User userExists = null;
+        userExists = userService.findUserByEmail(id);
+
+        return userExists;
+    }
+
+    @GetMapping("/schedule1/{id}")
+    public Optional<Schedule> getSchedule1(@PathVariable String id)
+    {
+        Optional<Schedule> sc = scheduleRepository.findById(id);
+        // If user does not have a schedule give him the default
+        if (sc.isPresent() == false){
+            Map<Days, ScheduleItem> si = new HashMap<>();
+            Schedule defaultschedule = new Schedule(id,si,true,ScheduleType.Weekly);
+            //@TODO Move to constant file
+            String schedule = "WEEKLY::1,13:00,9,TRUE;2,13:00,9,TRUE;3,13:00,9,TRUE;4,13:00,9,TRUE;5,13:00,9,TRUE;6,13:00,9,TRUE;0,13:00,9,TRUE";
+            try {
+                defaultschedule.createSheduleFromString(schedule);
+                defaultschedule.setId(id);
+                sc = Optional.of(defaultschedule);
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }
+        return sc;
     }
 
 }
