@@ -2,18 +2,17 @@ package auto.ausiot.ausiotrest.controller;
 
 import auto.ausiot.ausiotrest.model.*;
 import auto.ausiot.ausiotrest.model.security.User;
-import auto.ausiot.ausiotrest.repository.EmployeeRepository;
 import auto.ausiot.ausiotrest.repository.ScheduleRepository;
+import auto.ausiot.ausiotrest.repository.UnitRepository;
 import auto.ausiot.ausiotrest.tasks.ManageSensorRuntime;
 import auto.ausiot.ausiotrest.tasks.ScheduleMaster;
+import mqtt.Constants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.web.bind.annotation.*;
 
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 import java.text.ParseException;
 import java.util.*;
 
@@ -24,13 +23,13 @@ public class SchedulerController
 {
 
     @Autowired
-    EmployeeRepository employeeRepository;
-
-    @Autowired
     ScheduleRepository scheduleRepository;
 
     @Autowired
     private CustomUserDetailsService userService;
+
+    @Autowired
+    private UnitRepository unitRepository;
 
     @Autowired
     ScheduleMaster sm;
@@ -41,29 +40,60 @@ public class SchedulerController
     }
 
 
-
-    @PostMapping("/sensor")
-    public Schedule addSensor(@RequestBody String sensorID)
+    @PostMapping("/unit")
+    public Unit addSensor(@RequestBody Unit unit)
     {
-        Map<Days, ScheduleItem> si = new HashMap<>();
-        Schedule defaultschedule = new Schedule(sensorID,si,true,ScheduleType.Weekly);
-        //@TODO Move to constant file
-        String schedule = "WEEKLY::1,13:00,9,TRUE;2,13:00,9,TRUE;3,13:00,9,TRUE;4,13:00,9,TRUE;5,13:00,9,TRUE;6,13:00,9,TRUE;0,13:00,9,TRUE";
-        try {
-            defaultschedule.createSheduleFromString(schedule);
-            scheduleRepository.save(defaultschedule);
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-        return defaultschedule;
+        unitRepository.save(unit);
+        return unit;
     }
+
+
+    @GetMapping("/units/{id}")
+    public List<Unit> getUnits(@PathVariable String id)
+    {
+        List<Unit> unitList = unitRepository.findAll();
+        return unitList;
+    }
+
+    @RequestMapping(value = "/units/{id}",method = RequestMethod.DELETE)
+    public String deleteUnit(@PathVariable String id) {
+        Boolean result =unitRepository.existsById(id);
+        unitRepository.deleteById(id);
+        List<Schedule> lst = scheduleRepository.findByUnitID(id);
+        scheduleRepository.deleteAll(lst);
+        ManageSensorRuntime.removeSensorRecords(lst);
+        String res=  "{ \"success\" : "+ (result ? "true" : "false") +" }";
+        return res;
+    }
+
+
+//    @PostMapping("/sensor")
+//    public Schedule addSensor(@RequestBody String sensorID)
+//    {
+//        Map<Days, ScheduleItem> si = new HashMap<>();
+//        Schedule defaultschedule = new Schedule(sensorID,
+//
+//                si,true,ScheduleType.Weekly,
+//                new Date(), new Date(Constants.MAX_END_DATE));
+//        //@TODO Move to constant file
+//        String schedule = "WEEKLY::1,13:00,9,TRUE;2,13:00,9,TRUE;3,13:00,9,TRUE;4,13:00,9,TRUE;5,13:00,9,TRUE;6,13:00,9,TRUE;0,13:00,9,TRUE";
+//        try {
+//            defaultschedule.createSheduleFromString(schedule);
+//            scheduleRepository.save(defaultschedule);
+//        } catch (ParseException e) {
+//            e.printStackTrace();
+//        }
+//        return defaultschedule;
+//    }
 
     //Save
     @PostMapping("/schedule")
     public Schedule addSchedule(@RequestBody Schedule s)
     {
         String id = String.valueOf(new Random().nextInt());
-        Schedule snew = new Schedule(s.getId(),s.getMapSchedule(),s.isEnabled(),s.getType());
+        Schedule snew = new Schedule(s.getId(), s.getName(),
+                s.getUserID(),s.getUnitID(),s.getLineID(),
+                s.getMapSchedule(),s.isEnabled(),s.getType(),s.getStartDate(),s.getEndDate());
         if (scheduleRepository.findById(s.getId())!=null) {
             scheduleRepository.deleteById(s.getId());
             ManageSensorRuntime.removeSensorRecord(s.getId());
@@ -79,6 +109,13 @@ public class SchedulerController
         List<Schedule> scheduleList = scheduleRepository.findAll();
         return scheduleList;
     }
+
+    @GetMapping("/user/schedules/{id}")
+    public List<Schedule> getUserSchedules(@PathVariable String id)
+    {
+        List<Schedule> scheduleList = scheduleRepository.findByUserID(id);
+        return scheduleList;
+    }
     // Get ID
     @GetMapping("/schedule/{id}")
     public Optional<Schedule> getSchedule(@PathVariable String id)
@@ -87,7 +124,10 @@ public class SchedulerController
         // If user does not have a schedule give him the default
         if (sc.isPresent() == false){
             Map<Days, ScheduleItem> si = new HashMap<>();
-            Schedule defaultschedule = new Schedule(id,si,true,ScheduleType.Weekly);
+            Schedule defaultschedule = new Schedule(id,"Schedule -",
+                    "","","",
+                    si,true,ScheduleType.Weekly,
+                    new Date(), new Date(Constants.MAX_END_DATE));
             //@TODO Move to constant file
             String schedule = "WEEKLY::1,13:00,9,TRUE;2,13:00,9,TRUE;3,13:00,9,TRUE;4,13:00,9,TRUE;5,13:00,9,TRUE;6,13:00,9,TRUE;0,13:00,9,TRUE";
             try {
@@ -106,7 +146,10 @@ public class SchedulerController
         Optional<Schedule> optionalSchedule = scheduleRepository.findById(id);
         if (optionalSchedule.isPresent()) {
             Schedule s = optionalSchedule.get();
-            Schedule snew = new Schedule(s.getId(),s.getMapSchedule(),s.isEnabled(),s.getType());
+            Schedule snew = new Schedule(s.getId(), s.getName(),
+                    s.getUserID(), s.getUnitID() , s.getLineID(),
+                    s.getMapSchedule(),s.isEnabled()
+                    ,s.getType(),s.getStartDate(),s.getEndDate());
             scheduleRepository.save(snew);
         }
         return optionalSchedule;
@@ -136,7 +179,10 @@ public class SchedulerController
         // If user does not have a schedule give him the default
         if (sc.isPresent() == false){
             Map<Days, ScheduleItem> si = new HashMap<>();
-            Schedule defaultschedule = new Schedule(id,si,true,ScheduleType.Weekly);
+            Schedule defaultschedule = new Schedule(id, "Schedule 1",
+                    "","","",
+                    si,true,ScheduleType.Weekly,
+                                            new Date(), new Date(Constants.MAX_END_DATE));
             //@TODO Move to constant file
             String schedule = "WEEKLY::1,13:00,9,TRUE;2,13:00,9,TRUE;3,13:00,9,TRUE;4,13:00,9,TRUE;5,13:00,9,TRUE;6,13:00,9,TRUE;0,13:00,9,TRUE";
             try {

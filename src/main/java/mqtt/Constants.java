@@ -37,7 +37,7 @@ public class Constants {
     public static String RUN_STATUS_RUNNING = "RUNNING";
     public static String RUN_STATUS_CLOSED = "CLOSED";
 
-
+    public static long MAX_END_DATE = 193444070400000L;
 
 
 }

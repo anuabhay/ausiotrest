@@ -1,9 +1,11 @@
 package auto.ausiot.ausiotrest.model;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
+import mqtt.Constants;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -23,9 +25,18 @@ public class Schedule {
 
     @Id
     private @NonNull String id;
+    private @NonNull String name;
+    private @NonNull String userID;
+    private @NonNull String unitID;
+    private @NonNull String lineID;
     private @NonNull Map<Days, ScheduleItem> mapSchedule;
     private @NonNull boolean enabled = true;
     private @NonNull ScheduleType type = ScheduleType.Daily;
+
+    @JsonDeserialize(using= CustomerDateAndTimeDeserialize.class)
+    private Date startDate = new Date();
+    @JsonDeserialize(using= CustomerDateAndTimeDeserialize.class)
+    private Date endDate = new Date(Constants.MAX_END_DATE);;
 
     public boolean isInitialized(){
         boolean ret = true;

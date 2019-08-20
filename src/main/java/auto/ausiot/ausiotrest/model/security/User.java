@@ -2,14 +2,14 @@ package auto.ausiot.ausiotrest.model.security;
 
 
 
-        import java.util.Set;
+import java.util.Set;
 
-        import auto.ausiot.ausiotrest.model.security.Role;
-        import org.springframework.data.annotation.Id;
-        import org.springframework.data.mongodb.core.index.IndexDirection;
-        import org.springframework.data.mongodb.core.index.Indexed;
-        import org.springframework.data.mongodb.core.mapping.DBRef;
-        import org.springframework.data.mongodb.core.mapping.Document;
+import auto.ausiot.ausiotrest.model.security.Role;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.IndexDirection;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.DBRef;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "users")
 public class User {

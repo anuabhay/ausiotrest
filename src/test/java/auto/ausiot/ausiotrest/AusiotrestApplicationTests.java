@@ -5,6 +5,7 @@ import auto.ausiot.ausiotrest.model.Schedule;
 import auto.ausiot.ausiotrest.model.ScheduleItem;
 import auto.ausiot.ausiotrest.model.ScheduleType;
 import auto.ausiot.ausiotrest.tasks.ScheduleMaster;
+import mqtt.Constants;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -15,6 +16,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.net.URISyntaxException;
 import java.text.ParseException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,7 +34,10 @@ public class AusiotrestApplicationTests {
 	public Schedule getSchedule(){
 		Map<Days, ScheduleItem> si = new HashMap<>();
 
-		Schedule defaultschedule = new Schedule("10",si,true, ScheduleType.Weekly);
+		Schedule defaultschedule = new Schedule("10", "Schedule 1",
+				"","","",
+				si,true,ScheduleType.Weekly,
+				new Date(), new Date(Constants.MAX_END_DATE));
 		//@TODO Move to constant file
 		String schedule = "WEEKLY::1,13:00,9,TRUE;2,13:00,9,TRUE;3,13:00,9,TRUE;4,13:00,9,TRUE;5,13:00,9,TRUE;6,13:00,9,TRUE;0,13:00,9,TRUE";
 		try {

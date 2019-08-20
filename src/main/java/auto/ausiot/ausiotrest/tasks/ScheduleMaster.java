@@ -61,7 +61,10 @@ public class ScheduleMaster  implements Job {
     }
 
     public void runSchedules(Schedule s){
-        Schedule snew = new Schedule(s.getId(),s.getMapSchedule(),s.isEnabled(), ScheduleType.Daily);
+        Schedule snew = new Schedule(s.getId(), s.getName(),
+                        s.getUserID(), s.getUnitID() , s.getLineID(),
+                        s.getMapSchedule(),s.isEnabled(), ScheduleType.Daily
+                        ,s.getStartDate(), s.getEndDate());
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date());
 
