@@ -76,12 +76,13 @@ public class ScheduleMaster  implements Job {
                 closeSensor(s.getId());
             }else{
                 si = s.getcheduleItem(Days.get(calendar.get(Calendar.DAY_OF_WEEK) - 1));
-                logger.debug("Inside Open Action SI time ------- "  + si.getTime().toString());
-                logger.debug("Comapring two dates  ------- "  + si.getTime().toString() + "  :: " + new Date().toString() + " : "  + si.getDuration());
-
-                if (compareDates(si.getTime(),new Date(),si.getDuration())){
-                    if (isTriggeredForTheDay(s.getId() ) == false)
-                        openSensor(s.getId(),si);
+                if (si.isEnabled() && si.getDuration() > 0) {
+                    logger.debug("Inside Open Action SI time ------- " + si.getTime().toString());
+                    logger.debug("Comapring two dates  ------- " + si.getTime().toString() + "  :: " + new Date().toString() + " : " + si.getDuration());
+                    if (compareDates(si.getTime(), new Date(), si.getDuration())) {
+                        if (isTriggeredForTheDay(s.getId()) == false)
+                            openSensor(s.getId(), si);
+                    }
                 }
             }
         } catch (ParseException e) {
@@ -137,8 +138,12 @@ public class ScheduleMaster  implements Job {
     }
     public  void closeSensor(String schduleID) throws MqttException, URISyntaxException {
         Optional<ScheduleItemRuntime> sito = sruntimerepo.findById(schduleID);
-        String topic = Util.getTopic(schduleID);
-        String sensorNumber = Util.getSensorID(schduleID);
+        Schedule sch = srepo.findById(schduleID).get();
+
+        String topic = sch.getUnitID();//Util.getTopic(schduleID);
+        String sensorNumber = sch.getLineID();//Util.getSensorID(schduleID);
+
+
 
         if (sito.isPresent() == true) {
             ScheduleItemRuntime sit = sito.get();
@@ -160,8 +165,11 @@ public class ScheduleMaster  implements Job {
 
     public  void openSensor(String schduleID, ScheduleItem si) throws MqttException, URISyntaxException {
         Optional<ScheduleItemRuntime> sito = sruntimerepo.findById(schduleID);
-        String topic = Util.getTopic(schduleID);
-        String sensorNumber = Util.getSensorID(schduleID);
+        Schedule sch = srepo.findById(schduleID).get();
+
+        String topic = sch.getUnitID();
+        String sensorNumber = sch.getLineID();
+
         Subscriber.connect();
         Subscriber.sendMsg(topic, "R" + sensorNumber + "ON");
         logger.debug("Open Action ------- " + topic );
@@ -194,10 +202,7 @@ public class ScheduleMaster  implements Job {
     }
 
     public boolean compareDates(Date startTime , Date nowTime, int gapInMinutes) throws ParseException {
-
-
         boolean ret = false;
-
         if (startTime.getHours() == nowTime.getHours()){
             long diffmints = (nowTime.getMinutes() - startTime.getMinutes());
             if ((diffmints >= 0) && (diffmints < gapInMinutes)) {
@@ -205,8 +210,6 @@ public class ScheduleMaster  implements Job {
             }
 
         }
-
-
         return ret;
     }
 

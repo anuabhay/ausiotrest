@@ -27,8 +27,8 @@ public class ManageSensorRuntime {
 
         for (int i =0; i < schedules.size();i++) {
             String schduleID = schedules.get(i).getId();
-            String topic = Util.getTopic(schduleID);
-            String sensorNumber = Util.getSensorID(schduleID);
+            String topic = schedules.get(i).getUnitID();
+            String sensorNumber = schedules.get(i).getLineID();
             try {
                 Subscriber.connect();
                 Subscriber.sendMsg(topic, "R" + sensorNumber + "OFF");
@@ -41,9 +41,9 @@ public class ManageSensorRuntime {
         }
     }
 
-    public static void  removeSensorRecord(String schduleID)  {
-        String topic = Util.getTopic(schduleID);
-        String sensorNumber = Util.getSensorID(schduleID);
+    public static void  removeSensorRecord(Schedule schedule)  {
+        String topic = schedule.getUnitID();//Util.getTopic(schduleID);
+        String sensorNumber = schedule.getLineID();//Util.getSensorID(schduleID);
         try {
             Subscriber.connect();
             Subscriber.sendMsg(topic, "R" + sensorNumber + "OFF");
@@ -52,7 +52,7 @@ public class ManageSensorRuntime {
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
-        sruntimerepo.deleteById(schduleID);
+        sruntimerepo.deleteById(schedule.getId());
     }
 
     @EventListener(ApplicationReadyEvent.class)

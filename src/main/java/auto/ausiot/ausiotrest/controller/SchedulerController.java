@@ -51,7 +51,7 @@ public class SchedulerController
     @GetMapping("/units/{id}")
     public List<Unit> getUnits(@PathVariable String id)
     {
-        List<Unit> unitList = unitRepository.findAll();
+        List<Unit> unitList = unitRepository.findByUserID(id);
         return unitList;
     }
 
@@ -94,9 +94,12 @@ public class SchedulerController
         Schedule snew = new Schedule(s.getId(), s.getName(),
                 s.getUserID(),s.getUnitID(),s.getLineID(),
                 s.getMapSchedule(),s.isEnabled(),s.getType(),s.getStartDate(),s.getEndDate());
-        if (scheduleRepository.findById(s.getId())!=null) {
+
+        Optional<Schedule> sc = scheduleRepository.findById(s.getId());
+        if (sc.isPresent() == true){
+        //if (scheduleRepository.findById(s.getId())!=null) {
             scheduleRepository.deleteById(s.getId());
-            ManageSensorRuntime.removeSensorRecord(s.getId());
+            ManageSensorRuntime.removeSensorRecord(snew);
         }
         scheduleRepository.insert(snew);
         return snew;
