@@ -3,6 +3,7 @@ package auto.ausiot.ausiotrest.controller;
 import auto.ausiot.ausiotrest.model.*;
 import auto.ausiot.ausiotrest.model.security.User;
 import auto.ausiot.ausiotrest.repository.ScheduleRepository;
+import auto.ausiot.ausiotrest.repository.UnitDetailsRepository;
 import auto.ausiot.ausiotrest.repository.UnitRepository;
 import auto.ausiot.ausiotrest.tasks.ManageSensorRuntime;
 import auto.ausiot.ausiotrest.tasks.ScheduleMaster;
@@ -32,6 +33,9 @@ public class SchedulerController
     private UnitRepository unitRepository;
 
     @Autowired
+    private UnitDetailsRepository unitDetailsRepository;
+
+    @Autowired
     ScheduleMaster sm;
     @GetMapping(value = "/healthcheck", produces = "application/json; charset=utf-8")
     public String getHealthCheck()
@@ -43,8 +47,19 @@ public class SchedulerController
     @PostMapping("/unit")
     public Unit addSensor(@RequestBody Unit unit)
     {
-        unitRepository.save(unit);
-        return unit;
+        Optional<Unit> u = unitRepository.findById(unit.getId());
+        if (u.isPresent()){
+            throw new RuntimeException("Unit Already in Use");
+        }
+
+
+        Optional<UnitDetails> ud =  unitDetailsRepository.findById(unit.getId());
+        if (ud.isPresent() == true) {
+            unitRepository.save(unit);
+            return unit;
+        }else{
+            throw new RuntimeException("Unkown unit");
+        }
     }
 
 
@@ -52,8 +67,24 @@ public class SchedulerController
     public List<Unit> getUnits(@PathVariable String id)
     {
         List<Unit> unitList = unitRepository.findByUserID(id);
+        for (int i = 0 ; i < unitList.size(); i++){
+            Optional<UnitDetails> ud =  unitDetailsRepository.findById(unitList.get(i).getId());
+            if (ud.isPresent() == true){
+                unitList.get(i).setMqqttPassword(ud.get().getMqqttPassword());
+                unitList.get(i).setMqqttUrl(ud.get().getMqqttUrl());
+                unitList.get(i).setMqqttUserID(ud.get().getMqqttUserID());
+            }
+        }
+
         return unitList;
     }
+
+//    @GetMapping("/unitsdetails/{id}")
+//    public List<UnitDetails> getUnitDetails(@PathVariable String id)
+//    {
+//        List<UnitDetails> unitList = unitRepository.findByUserID(id);
+//        return unitList;
+//    }
 
     @RequestMapping(value = "/units/{id}",method = RequestMethod.DELETE)
     public String deleteUnit(@PathVariable String id) {

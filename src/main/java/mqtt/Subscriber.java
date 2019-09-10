@@ -15,9 +15,9 @@ public class Subscriber implements MqttCallback {
 
     private static final int qos = 1;
     //private String topic = "test";
-    private static MqttClient client = null;
-    private static Subscriber mqttsub = null;
-    private static MQTTCallBack act;
+    private MqttClient client = null;
+    //private Subscriber mqttsub = null;
+    private MQTTCallBack act;
 
 //    public Subscriber(String uri) throws MqttException, URISyntaxException {
 //        this();
@@ -25,31 +25,30 @@ public class Subscriber implements MqttCallback {
 
     public Subscriber() throws MqttException {
 
-        if (client == null) {
-            String host = Constants.MQTT_HOST;
-            String username = Constants.MQTT_USER;
-            String password = Constants.MQTT_PASSWD;
-            String clientId = MqttAsyncClient.generateClientId();
-
-
-            MqttConnectOptions conOpt = new MqttConnectOptions();
-            conOpt.setCleanSession(true);
-            conOpt.setUserName(username);
-            conOpt.setPassword(password.toCharArray());
-
-            this.client = new MqttClient(host, clientId, new MemoryPersistence());
-            this.client.setCallback(this);
-            this.client.connect(conOpt);
-        }
+//        if (client == null) {
+//            String host = Constants.MQTT_HOST;
+//            String username = Constants.MQTT_USER;
+//            String password = Constants.MQTT_PASSWD;
+//            String clientId = MqttAsyncClient.generateClientId();
+//
+//
+//            MqttConnectOptions conOpt = new MqttConnectOptions();
+//            conOpt.setCleanSession(true);
+//            conOpt.setUserName(username);
+//            conOpt.setPassword(password.toCharArray());
+//
+//            this.client = new MqttClient(host, clientId, new MemoryPersistence());
+//            this.client.setCallback(this);
+//            this.client.connect(conOpt);
+//        }
         //this.client.subscribe(this.topic, qos);
     }
 
-    public void createConnection() throws MqttException {
-        String host = Constants.MQTT_HOST;
-        String username = Constants.MQTT_USER;
-        String password = Constants.MQTT_PASSWD;
+    public void createConnection(String host, String username , String password) throws MqttException {
+//        String host = Constants.MQTT_HOST;
+//        String username = Constants.MQTT_USER;
+//        String password = Constants.MQTT_PASSWD;
         String clientId = MqttAsyncClient.generateClientId();
-
 
         MqttConnectOptions conOpt = new MqttConnectOptions();
         conOpt.setCleanSession(true);
@@ -94,24 +93,38 @@ public class Subscriber implements MqttCallback {
     public void messageArrived(String topic, MqttMessage message) throws MqttException {
         System.out.println(String.format("[%s] %s", topic, new String(message.getPayload())));
         //mqttsub.act.testcallback(new String(message.getPayload()));
-        mqttsub.act.onCallBack(new String(message.getPayload()));
+        act.onCallBack(new String(message.getPayload()));
     }
 
-    public static void connect() throws MqttException, URISyntaxException{
-        mqttsub = new Subscriber();
+
+    public void disconnect() throws MqttException {
+        client.disconnect();;
     }
 
-    public static void disconnect() throws MqttException {
-        //mqttsub.client.disconnect();;
+    public void sendMsg(String topic, String msg) throws MqttException, URISyntaxException{
+        sendMessage(topic, msg);
     }
 
-    public static void sendMsg(String topic, String msg) throws MqttException, URISyntaxException{
-        mqttsub.sendMessage(topic, msg);
+    public void subscribe(String topic,MQTTCallBack act) throws MqttException {
+        client.subscribe(topic, qos);
+        act = act;
     }
 
-    public static void subscribe(String topic,MQTTCallBack act) throws MqttException {
-        mqttsub.client.subscribe(topic, qos);
-        mqttsub.act = act;
-    }
+//    public static void connect() throws MqttException, URISyntaxException{
+//        mqttsub = new Subscriber();
+//    }
+//
+//    public static void disconnect() throws MqttException {
+//        //mqttsub.client.disconnect();;
+//    }
+//
+//    public static void sendMsg(String topic, String msg) throws MqttException, URISyntaxException{
+//        mqttsub.sendMessage(topic, msg);
+//    }
+//
+//    public static void subscribe(String topic,MQTTCallBack act) throws MqttException {
+//        mqttsub.client.subscribe(topic, qos);
+//        mqttsub.act = act;
+//    }
 }
 

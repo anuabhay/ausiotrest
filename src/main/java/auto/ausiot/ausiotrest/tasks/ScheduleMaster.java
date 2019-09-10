@@ -3,6 +3,7 @@ package auto.ausiot.ausiotrest.tasks;
 import auto.ausiot.ausiotrest.model.*;
 import auto.ausiot.ausiotrest.repository.ScheduleRepository;
 import auto.ausiot.ausiotrest.repository.ScheduleRuntimeRepository;
+import auto.ausiot.ausiotrest.repository.UnitDetailsRepository;
 import auto.ausiot.ausiotrest.util.Util;
 import mqtt.Constants;
 import mqtt.Subscriber;
@@ -42,6 +43,12 @@ public class ScheduleMaster  implements Job {
 
     @Autowired
     ScheduleRuntimeRepository scheduleRuntimeRepository;
+
+
+    static UnitDetailsRepository unitdetailrepo;
+
+    @Autowired
+    UnitDetailsRepository unitDetailsRepository;
 
 
     public ScheduleMaster() throws SchedulerException {
@@ -139,10 +146,14 @@ public class ScheduleMaster  implements Job {
     public  void closeSensor(String schduleID) throws MqttException, URISyntaxException {
         Optional<ScheduleItemRuntime> sito = sruntimerepo.findById(schduleID);
         Schedule sch = srepo.findById(schduleID).get();
+        Optional<UnitDetails> udo = unitdetailrepo.findById(sch.getUnitID());
+        UnitDetails ud = null;
+        if (udo.isPresent() == true){
+            ud = udo.get();
+        }
 
         String topic = sch.getUnitID();//Util.getTopic(schduleID);
         String sensorNumber = sch.getLineID();//Util.getSensorID(schduleID);
-
 
 
         if (sito.isPresent() == true) {
@@ -150,12 +161,13 @@ public class ScheduleMaster  implements Job {
             try {
                 if (compareDates(sit.getEndtime(), new Date())){
                     // Remove entry
-                    Subscriber.connect();
-                    Subscriber.sendMsg(topic, "R" + sensorNumber + "OFF");
+                    Subscriber mqttsub = new Subscriber();
+                    mqttsub.createConnection(ud.getMqqttUrl(),ud.getMqqttUserID(),ud.getMqqttPassword());
+                    mqttsub.sendMsg(topic, "R" + sensorNumber + "OFF");
                     //sruntimerepo.deleteById(schduleID);
                     updateScheduleItemRuntimetoDB(schduleID,Constants.RUN_STATUS_CLOSED);
                     logger.debug(". " + topic );
-                    Subscriber.disconnect();
+                    mqttsub.disconnect();
                 }
             } catch (ParseException e) {
                 e.printStackTrace();
@@ -167,14 +179,20 @@ public class ScheduleMaster  implements Job {
         Optional<ScheduleItemRuntime> sito = sruntimerepo.findById(schduleID);
         Schedule sch = srepo.findById(schduleID).get();
 
+        Optional<UnitDetails> udo = unitdetailrepo.findById(sch.getUnitID());
+        UnitDetails ud = null;
+        if (udo.isPresent() == true){
+            ud = udo.get();
+        }
         String topic = sch.getUnitID();
         String sensorNumber = sch.getLineID();
 
-        Subscriber.connect();
-        Subscriber.sendMsg(topic, "R" + sensorNumber + "ON");
+        Subscriber mqttsub = new Subscriber();
+        mqttsub.createConnection(ud.getMqqttUrl(),ud.getMqqttUserID(),ud.getMqqttPassword());
+        mqttsub.sendMsg(topic, "R" + sensorNumber + "ON");
         logger.debug("Open Action ------- " + topic );
         addScheduleItemRuntimetoDB(schduleID,si,Constants.RUN_STATUS_RUNNING);
-        Subscriber.disconnect();
+        mqttsub.disconnect();
     }
 
 //    public String getTopic(String schduleID){
@@ -219,6 +237,7 @@ public class ScheduleMaster  implements Job {
     public void doSomethingAfterStartup() throws SchedulerException {
        srepo = scheduleRepository;
        sruntimerepo = scheduleRuntimeRepository;
+       unitdetailrepo = unitDetailsRepository;
        st.start();
     }
 }
